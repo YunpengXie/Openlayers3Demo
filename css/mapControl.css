@@ -1,0 +1,180 @@
+/*#map .ol-zoom .ol-zoom-out{
+	margin-top: 204px;
+}*/
+/*#map .ol-zoomslider{
+	background-color: transparent;
+	top: 2.3em;
+}*/
+/*#map .ol-touch .ol-zoom .ol-zoom-out{
+	margin-top: 212px;
+}*/
+/*#map .ol-touch .ol-zoomslider{
+	top: 2.75em;
+}*/
+#tree{
+	width: 20%;
+	height: 576px;
+	float: left;
+}
+#map{
+	width: 80%;
+	height: 576px;
+	margin-right: 0;
+	float: right;
+}
+.navbar-inverse .brand {
+  	color: #fff;
+ 	font-size: 160%;
+  	font-weight: bold;
+  	position: absolute;
+  	top: 6px;
+  	left: 16px;
+}
+.navbar-inverse .brand:hover,
+.navbar-inverse .brand:focus {
+  	color: #aae1e9;
+  	text-decoration: none;
+}
+#menu{
+	z-index: 2000;
+	position: absolute;
+	float: left;
+	bottom: 10px;
+}
+#map .ol-zoom-in .ol-has-tooltip:hover [role = tooltip],
+#map .ol-zoom-out .ol-has-tooltip:hover [role = tooltip],
+#map .ol-zoom-extent{
+	top: 280px;
+}
+
+#mouse-position{
+	float: left;
+	position: absolute;
+	bottom: 5px;
+	width: 200px;
+	height: 20px;
+	z-index: 2000;
+}
+.custom-mouse-position{
+	color: Red;
+	font-size: 16px;
+	font-family: "微软雅黑";
+}
+
+.layerControl{
+	position: absolute;
+	bottom: 5px;
+	min-width: 200px;
+	max-height: 200px;
+	right: 0px;
+	top: 55px;
+	z-index: 2000;
+	color: #ffffff;
+	background-color: #4c4e5a;
+	border-width: 10px;
+	border-radius: 10px;
+	border-color: #000 #000 #000 #000;
+}
+.layerControl .title{
+	font-weight: bold;
+	font-size: 15px;
+	margin: 10px;
+}
+.layerTree li{
+	list-style: none;
+	margin: 5px 10px;
+}
+/* 自定义鹰眼样式*/
+.ol-custom-overviewmap, .ol-custom-overviewmap.ol-uncollapsible{
+	bottom: 0;
+	right: : auto;
+	left: 0;
+	top: auto;
+}
+/* 鹰眼控件展开时控件外框的样式 */
+.ol-customviewmap: not(.ol-collapsed){
+	border: 1px solid black;
+}
+/* 鹰眼控件在地图容器的样式 */
+.ol-custom-overviewmap .ol-overviewmap-map{
+	border: none;
+	width: 300px;
+}
+/* 在鹰眼控件中显示当前窗口中主图区域的边框 */
+.ol-custom-overviewmap .ol-overviewmap-box{
+	border: 2px solid red;
+}
+/* 在鹰眼控件展开时其控件按钮图标的样式 */
+.ol-custom-overviewmap: not(.ol-collapsed) button{
+	bottom: 0;
+	left: 0;
+	right: auto;
+	top: auto;
+}
+#animationDiv{
+	z-index: 2000;
+	position: absolute;
+	float: left;
+	bottom: 10px;
+}
+#animationDiv > input{
+	margin-right: 20px;
+}
+
+#measurement{
+	float: left;
+	position: absolute;
+	bottom: 10px;
+	left: 263px;
+	z-index: 2000;
+}
+.checkbox{
+	left: 20px;
+}
+
+.tooltip{
+	position: relative;
+	background: rgba(0, 0, 0, 0.5);
+	border-radius: 4px;
+	color: white;
+	padding: 4px 8px;
+	opacity: 0.7;
+	white-space: nowrap;
+}
+.tooltip-measure{
+	opacity: 1;
+	font-weight: bold;
+}
+.tooltip-static{
+	background-color: #ffcc33;
+	color: black;
+	border: 1px solid white;
+}
+.tooltip-measure:before, .tooltip-static:before {
+	border-top: 6px solid rgba(0, 0, 0, 0.5);
+	border-right: 6px solid transparent;
+	border-left: 6px solid transparent;
+	content: "";
+	position: absolute;
+	bottom: -6px;
+	margin-left: -7px;
+	left: 50%;
+}
+
+.tooltip-static:before{
+	border-top-color: #ffcc33;
+}
+#arcgisData{
+	float: left;
+	position: absolute;
+	bottom: 10px;
+	left: 263px;
+	z-index: 2000;
+}
+#opendata{
+	float: left;
+	position: absolute;
+	bottom: 10px;
+	left: 263px;
+	z-index: 2000;
+}

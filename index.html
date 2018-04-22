@@ -1,0 +1,1039 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>OpenLayers3示例</title>
+	<link rel="shortcut icon" href="data/logo-70x70.png" type="image/x-icon" />
+
+	<link rel="stylesheet" type="text/css" href="css/mapControl.css">
+	<link rel="stylesheet" href="./libs/bootstrap-treeview/bootstrap-treeview.css"/>
+	<link rel="stylesheet" href="./libs/bootstrap/bootstrap.css"/>
+	
+	<script src="js/jquery-3.3.1.min.js"></script>
+	<script src="libs/bootstrap-treeview/bootstrap-treeview.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="./libs/ol/ol.css">
+	<script type="text/javascript" src="libs/ol/ol.js"></script>
+	<style>
+		body{
+			margin: 0;
+		}
+		h1{
+			margin: 0;
+		}
+	</style>
+</head>
+<body>
+	<nav class="navbar navbar-inverse" role="navigation" style="margin-bottom: 0px;">
+		<div class="nav-collapse" style="height: 50px">
+    		<div class="navbar-header">
+        		<a class="brand" font="20"><img src="data/logo-70x70.png" height="35"/> OpenLayers示例集锦</a>
+    		</div>
+    		<div style="float: right;">
+    			<button class="btn btn-default navbar-btn">
+    				<span class="glyphicon glyphicon-globe"></span>
+    				<a href="http://www.openlayers.cn/forum.php"> 论坛求助</a>
+    			</button>
+    			<button class="btn btn-default navbar-btn">
+    				<span class="glyphicon glyphicon-send"></span>
+    				<a href="https://openlayers.org/en/latest/apidoc/ol.layer.Base.html"> OL3 API</a>
+    			</button>
+    			<button class="btn btn-default navbar-btn">
+    				<span class="glyphicon glyphicon-user"></span>
+    				<a href="#"> 个人中心</a>
+    			</button>
+    		</div>
+    	</div>
+	</nav>
+	<div id="tree"  style="overflow-y: scroll;"></div>
+	<div id="map">
+	</div>
+</body>
+<script type="text/javascript">
+	var osmLayer = new ol.layer.Tile({
+		source: new ol.source.OSM(),
+		name: '世界地图(OSM瓦片)'
+	});
+	var map = new ol.Map({
+		target: 'map',
+		view: new ol.View({
+			center: [12950000, 4860000],
+			zoom: 5
+		})
+	});
+	map.addLayer(osmLayer);
+	var tree
+	=[
+	{
+		text: "地图控件",
+		nodes:[
+			{
+				text: "导航控件"
+			},
+			{
+				text: "地图操作"
+			},
+			{
+				text: "图层控件"
+			},
+			{
+				text: "鼠标位置"
+			},
+			{
+				text: "比例尺"
+			},
+			{
+				text: "鹰眼"
+			},
+			{
+				text: "全屏显示"
+			},
+			{
+				text: "网络信息"
+			},
+			{
+				text: "图层探查"
+			},
+			{
+				text: "测量控件"
+			},
+			{
+				text: "动画效果"
+			}
+		]
+	},
+	{
+		text: "多源数据",
+		nodes:[
+			{
+				text: "基础数据"
+			},
+			{
+				text: "开放数据"
+			},
+			{
+				text: "公共地图"
+			},
+			{
+				text: "天地图"
+			},
+			{
+				text: "多源数据叠加"
+			},
+			{
+				text: "地图导出"
+			}
+		]
+	},
+	{
+		text: "图形绘制",
+		nodes:[
+			{
+				text: "绘制几何图形"
+			},
+			{
+				text: "图形样式编辑"
+			},
+			{
+				text: "图形交互编辑"
+			}
+		]
+	}
+	];
+	$('#tree').treeview({
+		data: tree,
+		color: "#888",
+		backColor: "black",
+		// collapseIcon： "",
+		// nodeIcon: "glyphicon glyphicon-plus-sign",
+	});
+
+	//地图导航控件
+	var zoomSlider = new ol.control.ZoomSlider();
+	var zoomToExtent = new ol.control.ZoomToExtent({
+		extent:[
+			13100000, 4290000,
+			13200000, 5210000
+		]
+	});
+
+	//地图比例尺
+	var scaleLineControl = new ol.control.ScaleLine({
+		units: "metric"
+	});
+
+	//鹰眼控件
+	var overviewMapControl = new ol.control.OverviewMap({
+		className: 'ol-overviewmap ol-custom-overviewmap',
+		layers: [
+			new ol.layer.Tile({
+				source: new ol.source.OSM({
+					url: 'http://{a-c}.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+				})
+			})
+		],
+		collapseLable: '\u00BB',
+		label: '\u00AB',
+		collapsed: false
+	});
+	//全屏显示
+	var fullScreen = new ol.control.FullScreen();
+	//地图视图、缩放级别、地图中心、旋转角度
+	var view = map.getView();
+	var zoom = view.getZoom();
+	var center = view.getCenter();
+	var rotation = view.getRotation();
+	//鼠标位置信息
+	var mousePositionControl
+	//json图层、kml图层
+	var jsonMap = new ol.layer.Vector({
+					source: new ol.source.Vector({
+						url: 'https://openlayers.org/en/v4.6.5/examples/data/geojson/countries.geojson',
+						format: new ol.format.GeoJSON()
+					}),
+					name: '国界(JSON格式的矢量图)'
+				});
+	var kmlMap = new ol.layer.Vector({
+					source: new ol.source.Vector({
+						url: 'https://openlayers.org/en/v4.6.5/examples/data/kml/2012_Earthquakes_Mag5.kml',
+						format: new ol.format.KML({
+							extractStyles: false
+						})
+					}),
+					name: '点(KML格式的矢量图)'
+				});
+
+	//Bing地图的key、道路图层、影像图层
+	var bingKey = 'Ag10K3b0Mh4oOGiuQ2RO745IsQ-mJPVRc_HsKNBHmJ6VFho-VbbZqlB6O-asZzNS';
+	var bingRoads = new ol.layer.Tile({
+		source: new ol.source.BingMaps({key: bingKey, imagerySet: 'Road'})
+	});
+	var bingImagery = new ol.layer.Tile({
+		source: new ol.source.BingMaps({key: bingKey, imagerySet: 'Aerial'})
+	});
+
+	var source = new ol.source.Vector({wrapX: false});
+
+    var vector = new ol.layer.Vector({
+        source: source
+    });
+
+    var draw;
+    var arcGISLayer, arcGISSource;
+    var opendata_vectorLayer;
+	$("#tree").on('nodeSelected', function(event, data){
+		if (data.text == "导航控件") {
+			map.addControl(zoomSlider);
+			map.addControl(zoomToExtent);
+		}
+		if (data.text == "地图操作") {
+			var divParent = document.getElementById("map");
+			var subDiv = document.createElement("div");
+			subDiv.id = "menu"
+			divParent.appendChild(subDiv);
+			var zoomOutBtn = document.createElement("input");
+			zoomOutBtn.id = "zoom-out";
+			zoomOutBtn.type = "button";
+			zoomOutBtn.value = "点击缩小";
+			zoomOutBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var zoom = view.getZoom();
+				view.setZoom(zoom - 1);
+			})
+			subDiv.appendChild(zoomOutBtn);
+
+			var zoomInBtn = document.createElement("input");
+			zoomInBtn.id = "zoom-in";
+			zoomInBtn.type = "button";
+			zoomInBtn.value = "点击放大";
+			zoomInBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var zoom = view.getZoom();
+				view.setZoom(zoom + 1);
+			})
+			subDiv.appendChild(zoomInBtn);
+
+			var panToBtn = document.createElement("input");
+			panToBtn.id = "panto";
+			panToBtn.type = "button";
+			panToBtn.value = "平移到【武汉】";
+			panToBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var wuhan = ol.proj.fromLonLat([114.31667, 30.51667]);
+				view.setCenter(wuhan);
+			})
+			subDiv.appendChild(panToBtn);
+
+			var restoreBtn = document.createElement("input");
+			restoreBtn.id = "restore";
+			restoreBtn.type = "button";
+			restoreBtn.value = "复位";
+			restoreBtn.addEventListener('click', function(){
+				view.setCenter(center);
+				view.setRotation(rotation);
+				view.setZoom(zoom);
+			})
+			subDiv.appendChild(restoreBtn);
+		}
+		if (data.text == "图层控件") {
+			var divParent = document.getElementById("map");
+			var subDiv = document.createElement("div");
+			subDiv.id = "layerControl";
+			subDiv.className = "layerControl"
+			divParent.appendChild(subDiv);
+			var titleDiv = document.createElement("div");
+			titleDiv.className = "title";
+			var label = document.createElement("label");
+			label.innerHTML = "图层列表";
+			titleDiv.appendChild(label);
+			subDiv.appendChild(titleDiv);
+			var ul = document.createElement("ul");
+			ul.id = "layerTree";
+			ul.className = "layerTree";
+			subDiv.appendChild(ul);
+
+			var layer = new Array();
+			var layerName = new Array();
+			var layerVisibility = new Array();
+
+			function loadLayersControl(map, id){
+				var treeContent = document.getElementById(id);
+				var layers = map.getLayers()
+				for (var i = 0; i < layers.getLength(); i++) {
+					layer[i] = layers.item(i);
+					layerName[i] = layer[i].get('name');
+					layerVisibility[i] = layer[i].getVisible();
+					var elementLi = document.createElement('li');
+					treeContent.appendChild(elementLi);
+					var elementInput = document.createElement('input');
+					elementInput.type = "checkbox";
+					elementInput.name = "layers";
+					elementLi.appendChild(elementInput);
+					var elementLabel = document.createElement('label');
+					elementLabel.className = "layer";
+					setInnerText(elementLabel, layerName[i]);
+					elementLi.appendChild(elementLabel);
+					if (layerVisibility[i]) {
+						elementInput.checked = true;
+					}
+					addChangeEvent(elementInput,layer[i]);
+				}
+			}
+
+			function addChangeEvent(element, layer){
+				element.onclick = function(){
+					if (element.checked) {
+						layer.setVisible(true);
+					}
+					else{
+						layer.setVisible(false);
+					}
+				};
+			}
+			function setInnerText(element, text){
+				if (typeof element.textContent == "string") {
+					element.textContent = text;
+				}
+				else{
+					element.innerText = text;
+				}
+			}
+			// map.addLayer(new ol.layer.Tile({
+			// 		source: new ol.source.MapQuest({layer: 'sat'}),
+			// 		name: '世界地图(MapQuest影像)'
+			// 	})
+			// );
+			map.addLayer(jsonMap);
+			map.addLayer(kmlMap);
+
+			loadLayersControl(map, "layerTree")
+		}
+		if (data.text == "鼠标位置") {
+			if (map.getLayers() == null) {
+				map.addLayer(osmLayer);
+			}
+			var divParent = document.getElementById("map");
+			var subDiv = document.createElement("div");
+			subDiv.id = "mouse-position";
+			divParent.appendChild(subDiv);
+			mousePositionControl = new ol.control.MousePosition({
+				coordinateFormat: ol.coordinate.createStringXY(4),
+				projection: 'EPSG:4326',
+				className: 'custom-mouse-position',
+				target: document.getElementById('mouse-position'),
+				undefinedHTML: '&nbsp',
+			});
+			map.addControl(mousePositionControl);
+		}
+		if (data.text == "比例尺") {
+			map.addControl(scaleLineControl);
+		}
+		if (data.text == "鹰眼") {
+			map.addControl(overviewMapControl);
+		}
+		if (data.text ==  "全屏显示") {
+			map.addControl(fullScreen);
+		}
+		if (data.text =="图层探查") {
+			map.removeLayer(osmLayer);
+			map.addLayer(bingRoads);
+			map.addLayer(bingImagery);
+			var radius = 75;
+			$(document).bind("keydown",function(event){
+				if (event.which === 38) {
+					radius = Math.min(radius + 5, 150);
+					map.render();
+				}else if(event.which === 40){
+					radius = Math.max(radius -5, 25);
+					map.render();
+				}
+			});
+			var mousePosition = null;
+			$(map.getViewport()).on('mousemove', function(event){
+				mousePosition = map.getEventPixel(event.originalEvent);
+				map.render();
+			}).on('mouseout', function(){
+				mousePosition = null;
+				map.render();
+			});
+
+			bingImagery.on('precompose', function(event){
+				var ctx = event.context;
+				var pixelRatio = event.frameState.pixelRatio;
+				ctx.save();
+				ctx.beginPath();
+				if (mousePosition) {
+					ctx.arc(mousePosition[0] * pixelRatio, mousePosition[1]*pixelRatio,radius*pixelRatio,0,2*Math.PI);
+					ctx.lineWidth = 5*pixelRatio;
+					ctx.strokeStyle = 'rgb(0,0,0,0.5)';
+					ctx.stroke();
+				}
+				ctx.clip();
+			});
+
+			bingImagery.on('postcompose', function(event){
+				var ctx = event.context;
+				ctx.restore();
+			});
+		}
+		if (data.text == "动画效果") {
+			map.setProperties("loadTilesWhileAnimating", true);
+			var shenyang = ol.proj.fromLonLat([123.24, 41.50]);
+			var beijing = ol.proj.fromLonLat([116.28, 39.54]);
+			var shanghai = ol.proj.fromLonLat([121.29, 31.14]);
+			var wuhan = ol.proj.fromLonLat([114.21, 30.37]);
+			var guangzhou = ol.proj.fromLonLat([113.15, 23.08]);
+			var haikou = ol.proj.fromLonLat([110.20, 20.02]);
+			var divParent = document.getElementById("map");
+			var subDiv = document.createElement("div");
+			subDiv.id = "animationDiv";
+			divParent.appendChild(subDiv);
+
+			function bounce(t) {
+        		var s = 7.5625, p = 2.75, l;
+        		if (t < (1 / p)) {
+          			l = s * t * t;
+        		} else {
+          			if (t < (2 / p)) {
+            		t -= (1.5 / p);
+            		l = s * t * t + 0.75;
+          		} else {
+            		if (t < (2.5 / p)) {
+              			t -= (2.25 / p);
+              			l = s * t * t + 0.9375;
+            		} else {
+              			t -= (2.625 / p);
+              			l = s * t * t + 0.984375;
+            		}
+          		}
+        		}
+       			 return l;
+     		}
+			function elastic(t) {
+        		return Math.pow(2, -10 * t) * Math.sin((t - 0.075) * (2 * Math.PI) / 0.3) + 1;
+      		}
+			var panBtn = document.createElement("input");
+			panBtn.id = "pan";
+			panBtn.type = "button";
+			panBtn.value = "平移定位到沈阳";
+			panBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var rotation = view.getRotation();
+				view.animate({
+					center: shenyang,
+					duration: 2000,
+					zoom: 8
+				});
+				// view.setCenter(shenyang);
+			});
+			subDiv.appendChild(panBtn);
+
+			var elasticBtn = document.createElement("input");
+			elasticBtn.id = "elastic";
+			elasticBtn.type = "button";
+			elasticBtn.value = "弹性定位到北京";
+			elasticBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var zoom = view.getZoom();
+				view.animate({
+					center: beijing,
+					duration: 2000,
+					easing: elastic,
+					zoom: 8
+				});
+			});
+			subDiv.appendChild(elasticBtn);
+
+			var bounceBtn = document.createElement("input");
+			bounceBtn.id = "bounce";
+			bounceBtn.type = "button";
+			bounceBtn.value = "反弹定位到上海";
+			bounceBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var zoom = view.getZoom();
+				view.animate({
+					center: shanghai,
+					duration: 2000,
+					easing: bounce,
+					zoom: 8
+				});
+			});
+			subDiv.appendChild(bounceBtn);
+
+			var spinBtn = document.createElement("input");
+			spinBtn.id = "spin";
+			spinBtn.type = "button";
+			spinBtn.value = "自旋转到武汉";
+			spinBtn.addEventListener('click', function(){
+				var view = map.getView();
+				var center = view.getCenter();
+				 view.animate({
+          			center: [
+            			center[0] + (wuhan[0] - center[0]) / 2,
+            			center[1] + (wuhan[1] - center[1]) / 2
+          			],
+          			rotation: Math.PI,
+          			easing: ol.easing.easeIn
+        		}, {
+          			center: wuhan,
+          			rotation: 2 * Math.PI,
+          			easing: ol.easing.easeOut
+        		});
+			});
+			subDiv.appendChild(spinBtn);
+
+			function flyTo(location, done) {
+        		var duration = 3000;
+        		var view = map.getView();
+        		var zoom = 9;
+        		var parts = 2;
+        		var called = false;
+        		function callback(complete) {
+          			--parts;
+          			if (called) {
+           				return;
+          			}
+          			if (parts === 0 || !complete) {
+            			called = true;
+            			done(complete);
+          			}
+        		}
+        		view.animate({
+          			center: location,
+          			duration: duration
+        		}, callback);
+        		view.animate({
+          			zoom: zoom - 2,
+          			duration: duration / 2
+        		}, {
+          			zoom: zoom,
+          			duration: duration / 2
+        		}, callback);
+      		}
+      		var flyBtn = document.createElement("input");
+			flyBtn.id = "fly";
+			flyBtn.type = "button";
+			flyBtn.value = "飞行定位到广州";
+			flyBtn.addEventListener('click', function(){
+				flyTo(guangzhou, function(){});
+			});
+			subDiv.appendChild(flyBtn);
+
+			function tour() {
+        		var locations = [shenyang, beijing, shanghai, wuhan, guangzhou, haikou];
+        		var index = -1;
+        		function next(more) {
+          			if (more) {
+            			++index;
+            			if (index < locations.length) {
+              				var delay = index === 0 ? 0 : 750;
+              				setTimeout(function() {
+                				flyTo(locations[index], next);
+              				}, delay);
+            			} else {
+              				alert('Tour complete');
+            			}
+          			} else {
+            			alert('Tour cancelled');
+          			}
+        		}
+        		next(true);
+      		}
+
+      		var tourBtn = document.createElement("input");
+			tourBtn.id = "tour";
+			tourBtn.type = "button";
+			tourBtn.value = "中国行";
+			tourBtn.addEventListener('click', function(){
+
+				tour();
+			});
+			subDiv.appendChild(tourBtn);
+		}
+		if (data.text == "测量控件") {
+			var divParent = document.getElementById("map");
+			var subDiv = document.createElement("div");
+			subDiv.id = "measurement"
+			divParent.appendChild(subDiv);
+
+			var lableOne = document.createElement("label");
+			lableOne.innerHTML = "Geometry type &nbsp;";
+			subDiv.appendChild(lableOne);
+
+			var select = document.createElement("select");
+			select.id = "type";
+			subDiv.appendChild(select);
+
+			var optionOne = document.createElement("option");
+			optionOne.value = "LineString";
+			optionOne.innerHTML = "LineString";
+			select.appendChild(optionOne);
+			var optionTwo = document.createElement("option");
+			optionTwo.value = "Polygon";
+			optionTwo.innerHTML = "Polygon";
+			select.appendChild(optionTwo);
+			var optionThree = document.createElement("option");
+			optionThree.value = "Circle";
+			optionThree.innerHTML = "Circle";
+			select.appendChild(optionThree);
+			var optionFour = document.createElement("option");
+			optionFour.value = "None";
+			optionFour.innerHTML = "None";
+			select.appendChild(optionFour);
+
+			select.value = "LineString";
+			// select.addEventListener('change', function(){
+			// 	map.removeInteraction(draw);
+			// 	addInteraction();
+			// });
+			select.onchange = function(){
+				map.removeInteraction(draw);
+				// vector.getSource().clear();
+				addInteraction();
+			}
+			map.addLayer(vector);
+			addInteraction();
+			function addInteraction(){
+				var value = select.value;
+				if (value != 'None') {
+					draw = new ol.interaction.Draw({
+						source: source,
+						type: value
+					});
+					map.addInteraction(draw);
+				}
+			}
+			source.on('addfeature', function(event){
+				var feature = event.feature;
+				var geom = feature.getGeometry();
+				if (select.value == "LineString") {
+					alert(formatLength(geom));
+				}else if(select.value == "Polygon"){
+					alert(formatArea(geom));
+				}else if(select.value == "Circle"){
+					var radius = geom.getRadius();
+					var output = "面积是:"+formatCircle(Math.PI*Math.pow(radius,2));
+					alert(output);
+				}
+			});
+			var formatLength = function(geom){
+				var length = 0;
+				// feature = vector.getSource().getFeatures()[0];
+				// geom = feature.getGeometry();
+				var coordinates = geom.getCoordinates();
+				var wgs84Sphere = new ol.Sphere(6378137);
+				var sourceProj = map.getView().getProjection();
+				for(var i=0, ii = (coordinates.length) - 1; i < ii; ++i){
+					var c1 = ol.proj.transform(coordinates[i], sourceProj, 'EPSG:4326');
+					var c2 = ol.proj.transform(coordinates[i+1], sourceProj, 'EPSG:4326');
+					length+=wgs84Sphere.haversineDistance(c1,c2);
+				}
+				var output;
+				if (length > 100) {
+					output = (Math.round(length/1000 * 100) /100) + ' ' + 'km';
+				}else{
+					output = (Math.round(length*100)/100)+' '+'m';
+				}
+				return "长度是:"+output;
+			};
+			var formatArea = function(geom){
+				var wgs84Sphere = new ol.Sphere(6378137);
+				var sourceProj = map.getView().getProjection();
+				var geomTrans = geom.clone().transform(sourceProj, 'EPSG:4326');
+				var coordinates = geomTrans.getLinearRing(0).getCoordinates();
+				var area = Math.abs(wgs84Sphere.geodesicArea(coordinates));
+				var output;
+				if (area>10000) {
+					output = (Math.round(area/1000000*100)/100)+' '+'km^2';
+				}else{
+					output = (Math.round(area*100)/100)+' '+'m^2';
+				}
+				return "面积是:"+output;
+			}
+			var formatCircle =  function(area){
+				if (area > 10000) {
+					area = (Math.round(area/1000000*100)/100)+' '+'km^2'; 
+				}else{
+					area = (Math.round(area*100)/100)+' '+'m^2';
+				}
+				return area;
+			}
+		}
+		if (data.text == "基础数据") {
+			var mapDiv = document.getElementById("map");
+			var arcgisDiv = document.createElement("div");
+			arcgisDiv.id = "arcgisData";
+			mapDiv.appendChild(arcgisDiv);
+
+			var arc_ul = document.createElement("ul");
+			arcgisDiv.appendChild(arc_ul);
+			var arc_li = document.createElement("li");
+			arc_ul.appendChild(arc_li);
+			var checkLabel = document.createElement("label");
+			checkLabel.className = "checkbox";
+			checkLabel.innerHTML = "<input type='radio' name='maps' value='arcgis'/>ArcGIS地图";
+			arc_li.appendChild(checkLabel);
+
+			var typeSelect = document.createElement("select");
+			typeSelect.id = "arcgisType";
+			arc_li.appendChild(typeSelect);
+			var optionOne = document.createElement("option");
+			optionOne.value = "MapServer";
+			// optionOne.seleted = "selected";
+			optionOne.innerHTML = "MapServer在线瓦片地图";
+			typeSelect.appendChild(optionOne);
+			var optionTwo = document.createElement("option");
+			optionTwo.value = "arcgisOnline";
+			optionTwo.innerHTML = "arcgisOnline在线瓦片数据";
+			typeSelect.appendChild(optionTwo);
+			var optionThree = document.createElement("option");
+			optionThree.value = "RestFeatureService";
+			optionThree.innerText = "ArcGIS REST Feature Service";
+			typeSelect.appendChild(optionThree);
+			// map.removeLayer(osmLayer);
+
+			loadArcGISMap(typeSelect.value);
+			$("input[type='radio'][name='maps']").get(0).checked = true;
+			typeSelect.addEventListener('change', onChange);
+			function onChange(){
+				map.removeLayer(arcGISLayer);
+				loadArcGISMap(typeSelect.value);
+			}
+			function loadArcGISMap(type){
+				var cLayers = map.getLayers();
+				if (cLayers != null) {
+					for(var i = 0; i < cLayers.getLength(); i++){
+						map.removeLayer(cLayers[i]);
+					}
+				}
+				if (type == "MapServer") {
+					arcGISSource = new  ol.source.TileArcGISRest({
+						url: 'https://sampleserver1.arcgisonline.com/ArcGIS/rest/	services/' +
+          					'Specialty/ESRI_StateCityHighway_USA/MapServer'
+					});
+					arcGISLayer = new  ol.layer.Tile({
+						source: arcGISSource,
+						extent: [-13884991, 2870341, -7455066, 6338219]
+					});
+					map.addLayer(arcGISLayer);
+					setMapView([-10997148, 4569099], 5);
+				}
+				else if(type == "arcgisOnline"){
+					arcGISLayer = new ol.layer.Tile({
+						source: new ol.source.XYZ({
+							attributions: 'Tiles © <a href="https://services.arcgisonline.com/ArcGIS/'+'rest/services/World_Topo_Map/MapServer">ArcGIS</a>',
+							url: 'https://server.arcgisonline.com/ArcGIS/rest/services/' + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+						})
+					});
+					// map.removeLayer(osmLayer);
+					map.addLayer(arcGISLayer);
+					setMapView(ol.proj.fromLonLat([-121.1, 47.5]), 7);
+				}
+				else if(type == "RestFeatureService"){
+					var serviceUrl = 'https://sampleserver3.arcgisonline.com/ArcGIS/rest/services/' +
+          				'Petroleum/KSFields/FeatureServer/';
+          			var layer = '0';
+          			var esrijsonFormat = new ol.format.EsriJSON();
+          			arcGISSource = new ol.source.Vector({
+          				loader: function(extent, resolution, projection){
+          					var url = serviceUrl + layer + '/query/?f=json&' +
+              						'returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=' +
+              						encodeURIComponent('{"xmin":' + extent[0] + ',"ymin":' + extent[1] + ',"xmax":' + extent[2] + ',"ymax":' + extent[3] + ',"spatialReference":{"wkid":102100}}') +
+                   						'&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*' + '&outSR=102100';
+                   			$.ajax({url: url, dataType: 'jsonp', success: function(response){
+                   				if (response.error) {
+              						alert(response.error.message + '\n' +
+                  					response.error.details.join('\n'));
+            					} else {
+              						// dataProjection will be read from document
+              						var features = esrijsonFormat.readFeatures(response, {
+                							featureProjection: projection
+              							});
+              						if (features.length > 0) {
+                						arcGISSource.addFeatures(features);
+              						}
+            					}
+                   			}
+                   			});
+          				},
+          				strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+          					tileSize: 512
+        				}))
+          			});
+          			arcGISLayer = new ol.layer.Vector({
+          				source: arcGISSource
+          			});
+          			map.addLayer(arcGISLayer);
+          			setMapView(ol.proj.fromLonLat([-121.1, 47.5]), 5);
+
+				}
+			}
+
+			function setMapView(center, zoom){
+				var view = map.getView();
+				view.setCenter(center);
+				view.setZoom(zoom);
+			}
+		}
+		if (data.text == "开放数据") {
+			var mapDiv = document.getElementById("map");
+			var opendataDiv = document.createElement("div");
+			opendataDiv.id = "opendata";
+			mapDiv.appendChild(opendataDiv);
+			var noteLable = document.createElement("label");
+			noteLable.innerText = "请选择加载的数据类型";
+			opendataDiv.appendChild(noteLable);
+			var typeSelect = document.createElement("select");
+			typeSelect.id = "type";
+			opendataDiv.appendChild(typeSelect);
+			var optionOne = document.createElement("option");
+			optionOne.value = "geojson";
+			// optionOne.selected = "selected";
+			optionOne.innerText = "geojson";
+			typeSelect.appendChild(optionOne);
+			var optionTwo = document.createElement("option");
+			optionTwo.value = "kml";
+			optionTwo.innerText = "kml";
+			typeSelect.appendChild(optionTwo);
+			var optionThree = document.createElement("option");
+			optionThree.value = "gpx";
+			optionThree.innerText = "gpx";
+			typeSelect.appendChild(optionThree);
+			var dataUrl;
+			var ajaxDataType;
+			var center;
+			var zoom;
+			var projection = ol.proj.get('EPSG:3857');
+			typeSelect.onchange = function(e){
+				var dataType = typeSelect.value;
+				if (dataType == "geojson") {
+					osmLayer.setOpacity(0);
+					dataUrl = "https://openlayers.org/en/v4.6.5/examples/data/geojson/countries.geojson";
+					center = [0, 0];
+					zoom = 2;
+				}
+				if (dataType == "kml") {
+					osmLayer.setOpacity(0.5);
+					dataUrl = 'https://openlayers.org/en/v4.6.5/examples/data/kml/2012-02-10.kml';
+					center = [876970.8463461736, 5859807.853963373];
+					zoom = 10;
+				}
+				else if(dataType == "gpx"){
+					osmLayer.setOpacity(0.5);
+					dataUrl = 'https://openlayers.org/en/v4.6.5/examples/data/gpx/fells_loop.gpx';
+					center = [-7916041.528716288, 5228379.045749711];
+					zoom = 12;
+				}
+				loadVectorData(dataType, dataUrl);
+				var view = map.getView();
+				view.setCenter(center);
+				view.setZoom(zoom);
+			}
+
+			function loadVectorData(type, dataUrl){
+				if (opendata_vectorLayer != null || opendata_vectorLayer == "undefined") {
+					map.removeLayer(opendata_vectorLayer);
+				}
+				if (type == "geojson") {
+					var vectorSource = new ol.source.Vector({
+						url: dataUrl,
+						format: new ol.format.GeoJSON()
+					});
+				}
+				else if (type == "kml") {
+					var vectorSource = new ol.source.Vector({
+						url: dataUrl,
+						format: new ol.format.KML()
+					});
+				}
+				else if (type == "gpx") {
+					var vectorSource = new ol.source.Vector({
+						url: dataUrl,
+						format: new ol.format.GPX()
+					});
+				}
+				opendata_vectorLayer = new ol.layer.Vector({
+					source: vectorSource,
+					style: styleFunction
+				});
+				map.addLayer(opendata_vectorLayer);
+			}
+
+			var image = new ol.style.Circle({
+				radius: 5,
+				fill: null,
+				stroke: new ol.style.Stroke({color: 'red', width: 1})
+			});
+			var styles = {
+				'Point': [new ol.style.Style({
+					image: image
+				})],
+				'LineString': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'green',
+						width: 1
+					})
+				})],
+				'MultiLineString': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'green',
+						width: 1
+					})
+				})],
+				'MultiPoint': [new ol.style.Style({
+					image: image
+				})],
+				'MultiPolygon': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'yellow',
+						width: 1
+					}),
+					fill: new ol.style.Fill({
+						color: 'rgba(255, 255, 0, 0.1)'
+					})
+				})],
+				'Polygon': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'blue',
+						lineDash: [4],
+						width: 3
+					}),
+					fill: new ol.style.Fill({
+						color: 'rgba(0, 0, 255, 0.1)'
+					})
+				})],
+				'GeometryCollection': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'magenta',
+						width: 2
+					}),
+					fill: new ol.style.Fill({
+						color: 'magenta'
+					}),
+					image: new ol.style.Circle({
+						radius: 10,
+						fill: null,
+						stroke: new ol.style.Stroke({
+							color: 'magenta'
+						})
+					})
+				})],
+				'Circle': [new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: 'red',
+						width: 2
+					}),
+					fill: new ol.style.Fill({
+						color: 'rgba(255, 0, 0, 0.2)'
+					})
+				})]
+			};
+			var styleFunction = function(feature, resolution){
+				return styles[feature.getGeometry().getType()];
+			};
+		}
+		if (data.text == "公共地图") {
+			
+		}
+	});
+
+	$("#tree").on('nodeUnselected', function(event, data){
+		if (data.text == "导航控件") {
+			map.removeControl(zoomSlider);
+			map.removeControl(zoomToExtent);
+		}
+		if (data.text == "地图操作") {
+			$("#menu").remove();
+		}
+		if (data.text == "鼠标位置") {
+			map.removeControl(mousePositionControl);
+			$("#mouse-position").remove();
+		}
+		if (data.text == "图层控件") {
+			map.removeLayer(jsonMap);
+			map.removeLayer(kmlMap);
+			$("#treeContent").remove();
+			$("#layerControl").remove();
+		}
+		if (data.text == "比例尺") {
+			map.removeControl(scaleLineControl);
+		}
+		if (data.text == "鹰眼") {
+			map.removeControl(overviewMapControl);
+		}
+		if (data.text == "全屏显示") {
+			map.removeControl(fullScreen);
+		}
+		if (data.text == "图层探查") {
+			map.removeLayer(bingRoads);
+			map.removeLayer(bingImagery);
+			map.addLayer(osmLayer);
+			$(map.getViewport).off('mousemove');
+			$(map.getViewport).off('mouseout');
+		}
+		if (data.text == "动画效果") {
+			$("#animationDiv").remove();
+		}
+		if (data.text == "测量控件") {
+			// source.unByKey('addfeature');
+			draw = null;
+			vector.getSource().clear();
+			map.removeInteraction(draw);
+			map.removeLayer(vector);
+			$("#measurement").remove();
+		}
+		if (data.text == "基础数据") {
+			map.removeLayer(arcGISLayer);
+			$("#arcgisData").remove();
+		}
+		if (data.text == "开放数据") {
+			osmLayer.setOpacity(1);
+			map.removeLayer(opendata_vectorLayer);
+			$("#opendata").remove();
+		}
+	});
+
+
+</script>
+</html>
